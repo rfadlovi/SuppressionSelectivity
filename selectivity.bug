@@ -1,0 +1,18 @@
+model{
+  for (j in 1:nages){
+  vari[j]~dunif(0.0001,predS[j]*(1-predS[j]))
+  predS[j] <- 1 / (1+exp( -log(19)*((j-s50)/(s95-s50))))
+alph[j]<-((1-predS[j])/(vari[j])-(1/predS[j]))*(predS[j]^2)
+beta[j]<-(alph[j]*(1/predS[j]-1))
+  }
+
+
+  for (i in 1:nobs){
+    obs[i]~dbeta(alph[age[i]],beta[age[i]])
+
+    
+  }
+  s95~dunif (1,10)
+  s50~dunif (0,s95-0.1)
+
+}
