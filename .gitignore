@@ -6,6 +6,7 @@ outputs/sscen/sscen11_HBA.rds
 outputs/sscen/sscen1_CBA.rds
 outputs/sscen/sscen1_HBA.rds
 outputs/sscen/sscen2_CBA.rds
+outputs/sscen/sscen2_NatPred.rds
 outputs/sscen/sscen3_CBA.rds
 outputs/sscen/sscen3_HBA.rds
 outputs/sscen/sscen2_HBA.rds
