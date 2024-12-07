@@ -1,23 +1,28 @@
 
 # About this code ---- 
 
+# This code was written primarily by Rae Fadlovich with sections (noted in text) adapted from code written by Timothy E. Walsworth 
+
 ----
-  # This annotated code accompanies the article "Selectivity of invasive species suppression efforts influences control efficacy" in the Journal of Applied Ecology
+  # This annotated code accompanies the article "Selectivity of invasive species suppression efforts influences control efficacy" in the Journal of Applied Ecology accepted for publication 11/2024
 
   # This code can be used to evaluate the impact of selectivity and effort on invasive species control efficacy 
-  # As written, it provides population estimates for the invasive common carp population in Utah Lake, but we have heavily annotated it so that it can be adapted to other contexts  
-----
+  # As written, it provides projected population estimates for the invasive common carp population in Utah Lake, but we have heavily annotated it so that it can be adapted to other contexts  
+
+  ----
   
 # What data is needed to run this code ---- 
 
   # Population estimates
     # Our abundance-at-age estimates come from Walsworth, Wallace, et al., 2023 and the full model is described in Walsworth et al., 2020
-      # To adapt this model for your own system, you will need abundance estimates for different ages, stages, or size classes of your target species 
+      # To adapt this model for your own system, you will need abundance estimates for different age-, stage-, or size-classes of your target species 
+    # Population estimates file "inputs/UTLCarp_Natage_Medians.csv"
 
   # Selectivity estimates 
     # We provide a JAGS script for assessing selectivity if you have population estimates and age-based survey data 
     # If you already have selectivity and population estimates for your population, you can skip ahead to the simulation section
     # We calculate selectivity from catch density data collected during standardized annual monitoring in 2020 and 2021 
+    # Catch density files "inputs/UTL_CarpSeine_DensityAge_byHaul_2021.csv" "inputs/UTL_CarpSeine_DensityAge_byHaul_2020.csv"
 
   # Data for this project has been archived on Dryad and can alternatively be found in the rfadlovi/SuppressionSelectivity GitHub repository.
 
@@ -46,7 +51,7 @@ library(paletteer)
 # Set working directory to Github folder 
 setwd("~/Github/SuppressionSelectivity")
 
-# Commented out as they show up above. Legacy from GitHub where these codes are seperate files. 
+# Commented out as they show up above. Legacy from GitHub where these codes are separate files. 
 # library(R2jags)
 # library(coda)
 # library(lattice)
@@ -93,13 +98,13 @@ databund20<-Nage$X2020
 # Adding Nage to main df - median at age
 dat20$N<-Nage[dat20$age+1,13]
 
-#add in a seine haul number column rep
-#note that the 49 is hard coded. so, if you later combine 2020 and 2021 (or more)
+# Add in a seine haul number column rep
+# Note that the 49 is hard coded. 
 haul20<-rep(1:49,each=8)
 dat20$Haul<-haul20
 
 
-# redundant but I want to have data org and code for function seperate so its double the fun 
+# Redundant but I want to have data org and code for function seperate so its double the fun 
 N.at20<-dat20$N
 
 # Run selectivity function with 2020 data 
@@ -108,7 +113,7 @@ sag20<-sag(catchat=c.at20,Nat=dat20$N,q=q)
 # Add this selectivity into the main data 
 dat20$Selectivity<-sag20
 
-# Pull out the max selectivty for each haul 
+# Pull out the max selectivity for each haul 
 maxselecs20<-aggregate(dat20$Selectivity,by=list(dat20$Haul),max)
 
 # Make this vector long so it can be added onto dat 
@@ -116,7 +121,7 @@ ssvec20<-rep(maxselecs20$x,each=8)
 # Add it on to dat
 dat20$MaxSelectivity<-ssvec20
 
-# "Scale" the selectivity values by max 
+# Scale the selectivity values by max 
 scale.selec20<-dat20$Selectivity/dat20$MaxSelectivity
 # Replace NAs that resulted from 0/
 scale.selec20[is.na(scale.selec20)]<- 0
@@ -124,7 +129,7 @@ scale.selec20[is.na(scale.selec20)]<- 0
 # Add to data frame 
 dat20$ScaleSelec<-scale.selec20
 
-# Extract the lmesh stuff 
+# Extract the large mesh stuff 
 lmesh20<-dat20[dat20$mesh == "largemesh",]
 
 # Extract the small mesh stuff 
@@ -142,7 +147,7 @@ smesh20$ScaleSelec[smesh20$ScaleSelec==0]<- .001
 smesh20$ScaleSelec[smesh20$ScaleSelec==1]<- .999
 smesh_obs_20<-smesh20$ScaleSelec
 # Write out csv file to save data for later 
-# write.csv(smesh_obs20, file="outputs/smesh_scaled_selectivity_2020.csv")
+# write.csv(smesh_obs_20, file="outputs/smesh_scaled_selectivity_2020.csv")
 
 
 
@@ -154,10 +159,10 @@ c.at21<-dat21$density
 # Pull out just 2020 median abundance 
 databund21<-Nage$X2021
 
-# Adding Nage to main df - median at age
+# Adding Nage to main df - median number at age
 dat21$N<-Nage[dat21$age+1,14]
 
-# add in a seine haul number column rep
+# Add in a seine haul number column rep
 # Note that the 45 is hard coded and will need to be changed if you have a different number of hauls.
 haul21<-rep(1:45,each=8)
 
@@ -173,7 +178,7 @@ sag21<-sag(catchat=c.at21,Nat=dat21$N,q=q)
 # Add this selectivity into the main data 
 dat21$Selectivity<-sag21
 
-# Try to pull out the max selectivty part seven 
+# Pull out the max selectivty
 maxselecs21<-aggregate(dat21$Selectivity,by=list(dat21$Haul),max)
 
 # Make this vector long so it can be added onto dat 
@@ -181,7 +186,7 @@ ssvec21<-rep(maxselecs21$x,each=8)
 
 dat21$MaxSelectivity<-ssvec21
 
-# "Scale" the selectivity values by max 
+# Scale the selectivity values by max 
 scale.selec21<-dat21$Selectivity/dat21$MaxSelectivity
 
 scale.selec21[is.na(scale.selec21)]<- 0
@@ -189,7 +194,7 @@ scale.selec21[is.na(scale.selec21)]<- 0
 # Add to data frame 
 dat21$ScaleSelec<-scale.selec21
 
-# Extract the lmesh stuff 
+# Extract the large mesh stuff 
 lmesh21<-dat21[dat21$mesh == "largemesh",]
 
 # Extract the small mesh stuff 
@@ -277,18 +282,20 @@ mod.loc<-"selectivity.bug"
 mc.chains<-3
 
 # Samples to pull 
-mc.pull<-500000
+mc.pull<-500000 # You can reduce this number to speed things up for trial runs where you test other variables
 
 # Thinning rate
 mc.thin<-500
 
+# Run the models 
+#! Please note that running these models can take a few hours on a 'normal' work machine. 
 # Run the Large
 mod.out.l.20.21<-jags(data=mod.data.l.20.21,inits=NULL,parameters.to.save=mod.params,
                       model.file=mod.loc,n.chains=mc.chains, n.iter=mc.pull,
                       n.thin=mc.thin)
 
 # Save the run if you want to use the outputs later
-# save(mod.out.l.20.21, file="mo.l.20.21.rdata")
+# save(mod.out.l.20.21, file="outputs/mo.l.20.21.rdata")
 
 # Run the small 
 mod.out.s.20.21<-jags(data=mod.data.s.20.21,inits=NULL,parameters.to.save=mod.params,
@@ -296,9 +303,15 @@ mod.out.s.20.21<-jags(data=mod.data.s.20.21,inits=NULL,parameters.to.save=mod.pa
                       n.thin=mc.thin)
 
 # Save the small run if you want to use the outputs later
-# save(mod.out.s.20.21, file="mo.s.20.21.rdata")
+# save(mod.out.s.20.21, file="outputs/mo.s.20.21.rdata")
 
 ### Summarize Outputs -----------------------------------------------------------
+
+# Read in the model outputs if you have already run and saved them 
+# Load the large
+# load("outputs/mo.l.20.21.rdata")
+# # Load the small
+# load("outputs/mo.s.20.21.rdata")
 
 # Use the coda package to create a MCMC object for large mesh
 mod.out.fit.l<-as.mcmc(mod.out.l.20.21)
@@ -459,7 +472,7 @@ for(i in 2:nrow(mo.list.s$alph)){
 
 
 
-# Calculate the CI
+# Calculate the CI - can change method if desired 
 lci0h=ci(age0l,method = 'HDI') 
 lci1h=ci(age1l,method = 'HDI') 
 lci2h=ci(age2l,method = 'HDI') 
@@ -477,7 +490,7 @@ l_uci_posth<-c(lci0h$CI_high,lci1h$CI_high,lci2h$CI_high,lci3h$CI_high,lci4h$CI_
                lci5h$CI_high,lci6h$CI_high,lci7h$CI_high)
 
 
-# CI for the small mesh 
+# CI for the small mesh - can change method if desired
 
 sci0h=ci(age0s,method = 'HDI') 
 sci1h=ci(age1s,method = 'HDI') 
@@ -512,13 +525,15 @@ s_med_pred<-pred.selec(age = age200, s50 = ssumq[26,3],
 # These are the outputs that I read in for the plotting section 
 # If you are running this straight through, you do not necessarily need to save. But you may want to do so as it allows you to clear the rest of your working directory
 
-save(l_lci_posth, l_uci_posth, s_lci_posth, s_uci_posth, 
+save(l_lci_posth, l_uci_posth, s_lci_posth, s_uci_posth,
      age200, s_lci_pred, s_uci_pred, l_lci_pred, l_uci_pred,
-     l_med_pred, s_med_pred, file = "largesmall_jags_plotinfo.RData")
+     l_med_pred, s_med_pred, file = "outputs/largesmall_jags_plotinfo2.RData")
 
 
 
 # Simulations ------------------------------------------------------------------
+
+  # Running simulations of projected carp population with different selectivity and effort 
 
   # This code also runs simulations for knife-edge and domed selectivity scenarios. 
   # While we do not include them in our manuscript as they were distracting to our overall goals, we have included them here as they may be helpful for practicioners with these selectivity shapes in their removal programs
@@ -535,14 +550,14 @@ library(MQMF)
 
 # Load in the JAGS output - only necessary if you are not running straight through. But it is not a bad idea to clear and refresh environment here 
 
-# large
-load("outputs/mo.l.20.21.rdata")
 
-## Load population model estimates 
+# # large
+#  load("outputs/mo.l.20.21.rdata")
+
+# Load population model estimates
 
 ## Our model parameters come from the 2023 carp model  (see Walsworth, Wallace, et al., 2023 for a model description)
-load("inputs/UTL_VaryQ_boundSR22023-01-06.RData")  
-
+ load("inputs/UTL_VaryQ_boundSR22023-01-06.RData")
 
 # Remove unneeded things to clean up space 
 rm(abund.table, abund.table.dn, abund.table.up,abundmc, abundquants,
@@ -564,25 +579,25 @@ predS_mean<-mod.out.l.20.21$BUGSoutput$mean$predS
 predS_vari<-mod.out.l.20.21$BUGSoutput$mean$vari 
 
 
-
 # Calculate selectivity by shifting the mean S50 and s95 by 1 year
 
 # mean s50 from the JAGS model
-s501<-mod.out.s.20.21$BUGSoutput$mean$s50 
+s501<-mod.out.l.20.21$BUGSoutput$mean$s50 
 # mean s95 from the JAGS model
-s951<-mod.out.s.20.21$BUGSoutput$mean$s95 
+s951<-mod.out.l.20.21$BUGSoutput$mean$s95 
 
 # Find the s50 and s95 CI  
-mod.out.l.20.21$BUGSoutput$summary
-mod.out.s.20.21$BUGSoutput$summary
+# mod.out.l.20.21$BUGSoutput$summary
 
 
 # Calculate simulated log selectivities 
 
-# Shift the s50 by 1 again and again to get a shiftwed vector
+# Shift the s50 by 1 again and again to get a shifted vector
 s50_shift<-(rep(s501,11)-c(0:10)) 
 # Shifted vector for s95
 s95_shift<-(rep(s951,11)-c(0:10)) 
+
+
 # Function to calc selectivity off s50 and s95
 pred.selec.s5095c.loop<- function(s50,s95,age){ 
   s<-matrix(NA, nrow = length(age), ncol = length(s50))
@@ -608,9 +623,9 @@ s_log<-pred.selec.s5095c.loop(s50_shift,s95_shift, c(1:nage))
 
 # Please note that we do not include domed selectivity in our manuscript, but have left it in the code in case this shape is of use to you 
 
-a<-c(1:8) #ages
+a<-c(1:8) # ages
 ag<-c(2:7) 
-p1<-(ag) #look at the documentation for these 6 variables. It is a segmented formula 
+p1<-(ag) # look at the documentation for these 6 variables. It is a segmented formula 
 p2<-ag
 p3<-rep(8,6)
 p4<-rep(8,6)
@@ -633,10 +648,10 @@ for (i in 1:length(ag)){
 
 # Please note that we do not include knife edge selectivity in our manuscript, but have left it in the code in case this shape is of use to you 
 
-#storage matrix 
+# Storage matrix 
 k_selec<-array(data=NA, dim = c(8,8))
 
-#fill it in 
+# Fill it in 
 for(i in 1:8){
   for(j in 1:8){
     if(i+j>=9){
@@ -649,16 +664,16 @@ for(i in 1:8){
 
 
 
-# matrix with all the selectivities together 
+# Matrix with all the selectivities together 
 s_mean<-cbind(s_log, domeselec, k_selec)
 
-# Option to scale so selectivity max out at the measure max 
-# old_s_mean<- s_mean
-# for(i in 1:ncol(s_mean)){
-#   if (max(s_mean[,i]) > max(s_mean[,1])){
-#     s_mean[,i]<-s_mean[,i]*(max(s_mean[,1])/max(s_mean[,i])) #scale so that everything maxes at the max from lmesh prediction - #!little funky, def think about this 
-#   }
-# }
+# Option to scale so selectivity max out at the measure max
+old_s_mean<- s_mean # This just allows you to compare to previous vector more easily 
+for(i in 1:ncol(s_mean)){
+  if (max(s_mean[,i]) > max(s_mean[,1])){
+    s_mean[,i]<-s_mean[,i]*(max(s_mean[,1])/max(s_mean[,i])) #scale so that everything maxes at the max from lmesh prediction
+  }
+}
 
 # Option to standardise the cumulative selectivity - this will 'flatten' a lot but may allow for interesting inferences
 # Basically "sacrificing" catchability when selectivity is improved - keep catchability constant 
@@ -677,7 +692,7 @@ s_mean<-cbind(s_log, domeselec, k_selec)
 # Make variance matrix 
 # Model to provide variance given selectivity 
 
-# Organising into a data frame 
+# Organizing into a data frame 
 ldf<-data.frame(var = predS_vari, selec = predS_mean) 
 
 # Fit a model to the JAGS mean selectivity and variance 
@@ -685,12 +700,17 @@ l2<-lm(var ~ 0+ selec + I(selec^2), data = ldf)
 
 # summary(l2) # optional - check your summary 
 
-lc<-coef(l2) # Fit is pretty good, but probably overestimating low variance 
+lc<-coef(l2) # Fit is pretty good. Probably slightly overestimating low variance, which you may need to consider given your specific user case 
 
-#just putting a little fun(ction) 
+# Just putting a little fun(ction) for calculating variance
 vari_from_mean<-function(x){ 
-  vari<-(lc[1]*x)+(lc[2]*(x^2))  # calculate variance based off the model coefficients. 
+  vari<-(lc[1]*x)+(lc[2]*(x^2))  # Calculate variance based off the model coefficients. 
 }
+
+# # Alternatively this can be 'hard coded' as 
+# vari_from_mean<-function(x){ 
+#   vari<-(0.436*x)+(0.408*(x^2))  # Calculate variance based off the hard coded model coefficients. 
+# }
 
 vari_max<-function(x){ # Function for the max allowable variance for beta distribution
   vari<-x*(1-x)
@@ -711,7 +731,7 @@ for (i in 1:nage){ #this replaces the impossible variances
 
 # vari_max.check<-vari_max(x = s_mean) # maximum variance allowed just to look and check
 
-# Calculate ssa and ssb - outside to save time (turns out it really doesnt, but its staying this way because its not worse!) 
+# Calculate ssa and ssb 
 
 # Just setting up the  matrix structure 
 ssa<- s_mean 
@@ -721,7 +741,7 @@ for (sscen in 1:ncol(s_mean)){
   ssa[,sscen]<-((1-s_mean[,sscen])/(s_vari[,sscen])-(1/s_mean[,sscen]))*(s_mean[,sscen]^2) #alpha for the selectivity scenario 
   ssb[,sscen]<-(ssa[,sscen]*(1/s_mean[,sscen]-1)) #beta for the selectivity scenario 
 }
-#! Check to make sure the alphas and betas arent bad because of the variance calculations if applying to a new dataset 
+#! Check to make sure the alphas and betas aren't bad (impossible values) because of the variance calculations if applying to a new dataset 
 
 
 
@@ -729,18 +749,19 @@ for (sscen in 1:ncol(s_mean)){
 ### Initialise effort and other variables####
 ##............................................
 
+#Set up effort scenarios 
 # Effort going from mean to max historic to 50x max historic by half max historic, plus a 100x max historic  
 effort.scenario<- c(267,seq(341,3410, by = 170.5), seq(3751, 17050, by = 341), 34100) 
 
 # How many years do you want to project the populations forward?
 nysim<-50                                                    
 
-# nyr<- 2                                                     # When using stable state 
+# nyr<- 2                                                     # If using stable state 
 
 # How many total years in storage vectors (simulated plus observed)
 ny<-nysim+nyr                                                
 
-# How many effortlevels to test
+# How many effort levels to test
 n.scen.harv<-length(effort.scenario)                        
 
 # Number of iterations
@@ -788,10 +809,10 @@ Natmed<-matrix(as.numeric(Natqs),nrow=8,ncol=nyr,byrow=T)
 # effort<-array(data=NA,dim=c(nysim+1,n.scen.harv,niter))    # Storage matrix for commercial effort by year
 zlakedat<-(lakearea-mean(lakearea))/sd(lakearea)
 
-# set up array for mean selectivity by effort level 
+# Set up array for mean selectivity by effort level 
 selec.eff.u<-array(data=NA,dim=c(nage,n.scen.harv,ncol(s_mean)))   # Storage array for Numbers at age
 
-# fill in the values by selectivity and effort
+# Fill in the values by selectivity and effort
 for (sscen in 1:ncol(s_mean)){
   for (v in seq_along(effort.scenario)){
     for (k in 1:nage){
@@ -801,10 +822,10 @@ for (sscen in 1:ncol(s_mean)){
 }
 
 
-# Note that running sims forward is slow - highly recommend doing it in background from powershell/ second machine/ etc
+# Note that running sims forward can be slow - it takes me about an hour
 ## Note - Code CAN be run on a machine with 16GB RAM, the model output is "chunked" to not exceed this RAM
 
-#### run sims forward ####
+#### Run simulations forward ####
 for (sscen in 1:17){   #! Index will need to change if you added additional selectivity scenarios 
   set.seed(10) # Set seed for reproducibility
   # reset arrays 
@@ -933,9 +954,9 @@ for (sscen in 1:17){   #! Index will need to change if you added additional sele
 }
 
 # Afterwards save the whole shebang 
-save.image("230801_rs_pl_allcum_selecloop.rdata")
+# save.image("outputs/230801_rs_pl_allcum_selecloop.rdata") # Not in GitHub due to size 
 
-# Things to save for plotting - yes redundant w above but helpful for opening a smaller output file if you only want to plot and don't need the whole shebang 
+# Things to save for plotting - yes redundant with above but helpful for opening a smaller output file if you only want to plot and don't need the whole shebang 
 save(effort.scenario,selec.eff.u,ny,niter,wgts,s_mean,s_log, domeselec, k_selec,file = "outputs/plot_info.RData")
 
 
@@ -943,9 +964,11 @@ save(effort.scenario,selec.eff.u,ny,niter,wgts,s_mean,s_log, domeselec, k_selec,
 
 # Figures (Manuscript) --------------------------------------------------------- 
 
-setwd("~/GitHub/UTL_Carp_SelecSim/Selec_loop/outputs/reg_selec")
 
-## Make color palletes for cohesive figures ---- 
+
+# ##   # Plotting the manuscript figures 
+# library(rcartocolor)
+# library(paletteer) Make color palletes for cohesive figures ---- 
 
 teals<-rev(carto_pal(7,"BluGrn")) # for "current selectivity" effort scenarios 
 aro<-carto_pal(12, "Safe") # colorblind friendly pallette 
@@ -953,13 +976,13 @@ brgs<-(paletteer_c("grDevices::Burg", 11)) # for log selectivities
 grns<-paletteer_c("grDevices::Emrld", 8) # for knife selectivities
 orng<-rev(paletteer_c("grDevices::Oranges", 7))
 
-allcol<-c(brgs,orng[1:6],grns) # a single vector with all selectivityies when you have all the selecs together 
+allcol<-c(brgs,orng[1:6],grns) # a single vector with all selectivityies when you have all the selectivities together 
 
 ## Load plot info files ----
 
-load("plot_info.RData") # plot info from the simulations 
+load("outputs/plot_info.RData") # plot info from the simulations 
 
-load("~/JAGS/largesmall_jags_plotinfo.RData") # plot info for the JAGS selectivity outputs 
+load("outputs/largesmall_jags_plotinfo.RData") # plot info for the JAGS selectivity outputs 
 
 ## Figures ----
 
@@ -967,7 +990,7 @@ load("~/JAGS/largesmall_jags_plotinfo.RData") # plot info for the JAGS selectivi
 
 # Plot the selectivity scenarios 
 
-pdf("~/GitHub/UTL_Carp_SelecSim/thesis_figs/selec_scenarios1.pdf", height = 5, width = 7) # PDF output for figure 
+pdf("figures/Figure1.pdf", height = 5, width = 7) # PDF output for figure 
 
 par(mar=c(5.6,6.6,3.1,1.25)) # Figure margins 
 
@@ -990,7 +1013,7 @@ dev.off() # Turn off PDF plotting window
 
 # Plot carp biomass with current selectivity and max historic projected forward
 
-sscen1NatPred<-readRDS("sscen1_NatPred.rds") #Read in the simulations from the baseline selectivity scenario 
+sscen1NatPred<-readRDS("outputs/sscen/sscen1_NatPred.rds") #Read in the simulations from the baseline selectivity scenario 
 
 # Get biomass estimates by multiplying model output by weights 
 
@@ -1005,7 +1028,7 @@ abund_meds<-apply(abunds, MARGIN = 2, FUN = quantile, probs=.5) # Calculate the 
 
 # Plotting 
 
-pdf("~/GitHub/UTL_Carp_SelecSim/thesis_figs/baseline_projec.pdf", height = 5, width = 5) # PDF for model outputs
+pdf("figures/Figure2.pdf", height = 5, width = 5) # PDF for model outputs
 
 
 par(mar=c(5.6,7.1,3.1,1.25)) # Set plotting margins 
@@ -1051,7 +1074,7 @@ dev.off() # Turn off PDF plotting window
 
 
 # Plot current selectivity and max historic projected forward
-sscen1NatPred<-readRDS("sscen1_NatPred.rds") # Do not need to reload if it is still loaded from Figure 2. 
+sscen1NatPred<-readRDS("outputs/sscen/sscen1_NatPred.rds") # Do not need to reload if it is still loaded from Figure 2. 
 
 # Calculate the biomass by effort level for every year 25-50 years in the future 
 biom_by_eff_yr25to50<-array(0, c(niter,length(effort.scenario),length(c(25:50)))) # Storage array 
@@ -1073,7 +1096,7 @@ rm(sscen1NatPred) # Remove data to save space
 
 # Plot
 
-pdf("~/GitHub/UTL_Carp_SelecSim/thesis_figs/eff_v_biomass.pdf", height = 5, width = 5) # PDF Output 
+pdf("figures/Figure3.pdf", height = 5, width = 5) # PDF Output 
 
 usemar<-c(5.1,7.1,4.1,1.25) # Margins 
 par(mar=usemar) # Margins 
@@ -1105,14 +1128,14 @@ eff.l<-effort.scenario/341 # Calculate effort level in relation to historic maxi
 eff.a<-c(1,seq(20,100,by=20)) # For effort axis  
 axis(side=1,at=eff.a,labels = eff.a, las = 1, cex.axis=1.2) # Add effort axis 
 
-dev.off() # Turn off PDF plotting window 
+# dev.off() # Turn off PDF plotting window if you just want 3a
 
 
 
 ### Figure 3b. ---- 
 
 for (sscen in c(1:1)){ # Only plotting the 1 sscen for now, but the supplement will loop through same code  
-  TH<-readRDS(paste0("sscen",sscen,"_TH.rds")) # Read in each selectivity scenario file 
+  TH<-readRDS(paste0("outputs/sscen/sscen",sscen,"_TH.rds")) # Read in each selectivity scenario file 
   TH_y25to50_avg<-apply(TH[39:64,,], MARGIN = c(2,3), FUN = mean) # Mean 
   TH_meds_a<-apply(TH_y25to50_avg, MARGIN = 1, FUN = quantile, probs=.5) # Median 
   TH_.025_a<-apply(TH_y25to50_avg, MARGIN = 1, FUN = quantile, probs=.025) # CI
@@ -1154,7 +1177,7 @@ target_effort<-rep(NA,11) # Empty vector to store effort needed for each selecti
 
 # This will fill in the j, a , t selectivities, and in selec.ja[4] it will be a t/f if <50%
 for(sscen in 1:ncol(s_mean[,1:11])){
-  NatPred<-readRDS(paste0("sscen",sscen,"_NatPred.rds"))
+  NatPred<-readRDS(paste0("outputs/sscen/sscen",sscen,"_NatPred.rds"))
   for(j in 1:niter){
     for(i in 1:26){
       bbe_25to50[j,,i]<-as.numeric(colSums((NatPred[,i+38,,j]*wgts)))
@@ -1175,7 +1198,7 @@ MSY_at<-c(1:11) # Empty vector to store MSY data - the effort level where msdy i
 
 for (sscen in c(1:11)){ #  For each log selectivity scenario 
   
-  TH<-readRDS(paste0("sscen",sscen,"_TH.rds")) # Total harvest 
+  TH<-readRDS(paste0("outputs/sscen/sscen",sscen,"_TH.rds")) # Total harvest 
   TH_avg<-apply(TH[39:64,,], MARGIN = c(2,3), FUN = mean) # Average total harvest
   TH_med<-apply(TH_avg, MARGIN = 1, FUN = quantile, probs=.5) # Median total harvest
   TH_max<-which.max(TH_med) # Maximum total harvest 
@@ -1185,7 +1208,7 @@ for (sscen in c(1:11)){ #  For each log selectivity scenario
 # Cumulative selectivity 
 cum_selec<-apply(s_mean[,1:11],MARGIN = 2, FUN=sum)/8 # Cumulative selectivities 
 
-pdf("~/GitHub/UTL_Carp_SelecSim/thesis_figs/MSY_Target.pdf", height = 5, width = 5) # PDF for outputs 
+pdf("figures/Figure4.pdf", height = 5, width = 5) # PDF for outputs 
 
 par(mar=c(5.6,6.6,3.1,1.25)) # plot margins 
 
@@ -1218,27 +1241,27 @@ a15<-which(abund10.50 <= abund_meds[1]*.25, arr.ind = TRUE)
 a15<-which(abund10.50 <= abund_meds[1]*.25)
 
 length(a15)/41
-195.297/1000 # 39 percent of iterations 
+195.297/1000 # 19 percent of iterations 
 
 
 
 
 # Figures (Supplement) ---- 
 
-# Load packages
-library(rcartocolor)
-library(paletteer) 
+# # Load packages
+# library(rcartocolor)
+# library(paletteer) 
 
 ## Load plot info files ----
   # These are the same files as above, so they are commented out. Uncomment them if you have not run "Figures"
 
-# load("plot_info.RData") # plot info from the simulations 
+# load("outputs/plot_info.RData") # plot info from the simulations 
 # 
-# load("~/JAGS/largesmall_jags_plotinfo.RData") # plot info for the JAGS selectivity outputs 
+# load("outputs/largesmall_jags_plotinfo.RData") # plot info for the JAGS selectivity outputs 
 
 ### Figure S2. ----
 
-pdf("~/GitHub/UTL_Carp_SelecSim/JAE_figs/largesmall_selec.pdf", height = 5, width = 7) # Save file as a PDF output in the JAE Figures folder
+pdf("figures/supplement/s2.pdf", height = 5, width = 7) # Save file as a PDF output in the JAE Figures folder
 
 par(mar=c(5.6,6.6,3.1,1.25)) # Figure margins 
 
@@ -1277,10 +1300,10 @@ dev.off() # Turn off the PDF plotting window
 
 
 ### Figure S3. ----
-## Note that this formatting is slightly different than the published supplemental figure (But the content is identical). The formatting takes up a lot of lines of code and has been ommited for clarity. 
+## Note that this layout formatting is slightly different than the published supplemental figure (But the content is identical). The formatting takes up a lot of lines of code and has been ommited for clarity. 
 # Adding in additional scenarios for supplemental material to address R1 feedback 
 
-pdf("~/GitHub/UTL_Carp_SelecSim/JAE_Figs/supp_3.pdf", height = 11, width = 8.5) # Set up pdf to save all plots on one page 
+pdf("figures/supplement/s3.pdf", height = 11, width = 8.5) # Set up pdf to save all plots on one page 
 
 layout(mat = matrix(c(1,6:14,2,15:23,3,24:32,4,33:41,5,42:50), ncol=5, byrow=F),
        heights = c(2,1,1,1,1,1,1,1,1,1),
@@ -1314,7 +1337,7 @@ effort_examples<-c(2,3,5,10,21,27,34,60,61)
 
 # Loop through 
 for(sscen in selec_examples){
-  NatPred<-readRDS(paste0("sscen",sscen,"_NatPred.rds")) 
+  NatPred<-readRDS(paste0("outputs/sscen/sscen",sscen,"_NatPred.rds")) 
 
   
   abunds_effort_examples<-array(0, dim = c(niter, ny, length(effort_examples))) #storage for our abundance outputs 
@@ -1390,11 +1413,11 @@ for(sscen in selec_examples){
   
 }
 
-dev.off
+dev.off()
 
 ### Figure S4 ----
 
-pdf("~GitHub/UTL_Carp_SelecSim/JAE_Figs/supp4.pdf", height = 11, width = 8.5) # Set up pdf to save all plots on one page 
+pdf("figures/supplement/s4.pdf", height = 11, width = 8.5) # Set up pdf to save all plots on one page 
 layout(mat = matrix(c(1:10,21:30,11:20), ncol=3, byrow=F), widths = c(3,1,3))
 par(oma=c(20, 10, 5, 10), mar=c(0,1.5,2,1.5))
 
@@ -1404,7 +1427,7 @@ biom_by_eff_yr25to50<-array(0, c(niter,length(effort.scenario),length(c(25:50)))
 
 
 for (sscen in c(2:11)){ #this was looped for ESA, but i just want current ish for pub 
-  NatPred<-readRDS(paste0("sscen",sscen,"_NatPred.rds")) 
+  NatPred<-readRDS(paste0("outputs/sscen/sscen",sscen,"_NatPred.rds")) 
   # Calculate the biomass by effort level for every year 25-50 years in the future 
   for(j in 1:niter){
     for(i in 1:26){
@@ -1454,7 +1477,7 @@ for (sscen in c(2:11)){ #this was looped for ESA, but i just want current ish fo
 
 
 for (sscen in c(2:11)){ #looped  through all but the one in the pub 
-  TH<-readRDS(paste0("sscen",sscen,"_TH.rds"))
+  TH<-readRDS(paste0("outputs/sscen/sscen",sscen,"_TH.rds"))
   TH_y25to50_avg<-apply(TH[39:64,,], MARGIN = c(2,3), FUN = mean)
   TH_meds_a<-apply(TH_y25to50_avg, MARGIN = 1, FUN = quantile, probs=.5)
   TH_.025_a<-apply(TH_y25to50_avg, MARGIN = 1, FUN = quantile, probs=.025)
@@ -1496,6 +1519,4 @@ dev.off()
 
 # Thanks for reading through and/or using this code! 
 # Please feel free to Rae Fadlovich via GitHub (rfadlovi) or email with any questions. 
-
-
 
